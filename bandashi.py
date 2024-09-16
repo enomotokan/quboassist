@@ -254,10 +254,10 @@ print(turn_n)
 for n in range(N):
     color = list(np.random.choice(range(256), 3))
     
-    plt.plot(add[n], turn_n[0], color)
-    plt.plot(add[n], turn_n[len(turn_n) - 1], color)
+    plt.plot(add[n], cod[turn_n[0]], color)
+    plt.plot(add[n], cod[turn_n[len(turn_n) - 1]], color)
 
     for s in len(turn_n) - 1:
-        plt.plot(turn_n[s], turn_n[s + 1], color)
+        plt.plot(cod[turn_n[s]], cod[turn_n[s + 1]], color)
 
 plt.show()
