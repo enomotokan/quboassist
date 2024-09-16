@@ -1,0 +1,5 @@
+tytan==0.0.30
+numpy
+dwave-neal
+optuna
+matplotlib
