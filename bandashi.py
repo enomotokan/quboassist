@@ -85,7 +85,7 @@ print(np.min(visitable_S_N))
 
 def objective(trial):
 
-    l = [0.001, [trial.suggest_float("l_1", 0, 10), trial.suggest_float("l_2", 0, 100)]]
+    l = [0.001, [trial.suggest_float("l_1", 0, 0), trial.suggest_float("l_2", 0, 100)]]
 
     # 変数
 
@@ -142,6 +142,7 @@ def objective(trial):
         S_x = 0
         for s in visitable[n]:
             S_x += int(x["x{}_{}".format(n, s)])
+        # if S_x < m or S_x > M:
         if S_x > M:
             Error_num += 1
 
@@ -184,6 +185,8 @@ def objective(n, Sn_n, add_n, cod_n):
         l = [0.001, [trial.suggest_float("l_1", 0, 100), trial.suggest_float("l_2", 0, 100)]]
 
         N_n = len(cod_n)
+        qubo = {}
+
         x_tp = symbols_list((N_n, N_n), "x{}_{}")
 
         H = 0
@@ -191,22 +194,31 @@ def objective(n, Sn_n, add_n, cod_n):
         # 目的函数
 
         for s in range(N_n):
-             H += l[0] * (dist(add_n, cod_n[s])  * (x_tp[0][s] + x_tp[N_n - 1][s]))
+             add_qubo(qubo, ("x{}_{}".format(0, s), "x{}_{}".format(0, s)), l[0] * (dist(add_n, cod_n[s])))
+             add_qubo(qubo, ("x{}_{}".format(N_n - 1, s), "x{}_{}".format(N_n - 1, s)), l[0] * (dist(add_n, cod_n[s])))
 
         for t in range(1, N_n - 1):
             for s in range(N_n):
-                for s_ in range(s + 1, N_n):
-                    H += l[1][0] * dist(cod_n[s], cod_n[s_]) * x_tp[t][s] * x_tp[t + 1][s_]
+                for s_ in range(N_n):
+                    add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t + 1, s_)), l[0] * dist(cod_n[s], cod_n[s_]))
                    
         # 制約条件
 
         for s in range(N_n):
-            H += l[1][0] * (sum(x_tp[t][s] for t in range(N_n)) - 1)**2
+            for t in range(N_n):
+                for t_ in range(t, N_n):
+                    if t == t_:
+                        add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t, s)), - l[1][0])
+                    else:
+                        add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t_, s)), 2 * l[1][0])
 
         for t in range(N_n):
-            H += l[1][1] * (sum(x_tp[t][s] for s in range(N_n)) - 1)**2
-
-        qubo, offset = Compile(H).get_qubo()
+            for s in range(N_n):
+                for s_ in range(N_n):
+                    if s == s_:
+                        add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t, s)), - l[1][1])
+                    else:
+                        add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t, s_)), 2 * l[1][1])
 
         print("Get qubo")
 
