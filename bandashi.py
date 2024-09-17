@@ -25,8 +25,8 @@ def add_qubo(qubo, key, var):
 S = 2000
 N = 36
 
-m = 0
-M = 70
+m = 40
+M = 60
 
 # 各看板の座標を生成
 
@@ -52,7 +52,7 @@ Sn = []
 # 距離函数
 
 def dist(x, y):
-    return float(np.sum(np.abs(x - y)))
+    return float(np.linalg.norm(x - y))
 
 # 営業マンが訪問可能な看板までの距離
 r = 0.3
@@ -83,99 +83,57 @@ print(np.min(visitable_S_N))
 # 第一段　クラスタリング
 
 
-def objective(trial):
+dist_list = []
+dist_order_arg_n_s = []
+dist_order_arg_s_n = []
+S_n = [set() for n in range(N)]
+S_n_len = [0 for n in range(N)]
 
-    l = [0.001, [trial.suggest_float("l_1", 0, 0), trial.suggest_float("l_2", 0, 100)]]
-
-    # 変数
-
-    x = [[symbols("x{}_{}".format(n, s)) for s in visitable[n]] for n in range(N)]
-
-    # 制約条件
-
-    H = 0
-
-    aux_1 = []
-    aux_2 = []
-
+for s in range(S):
+    dist_list.append([])
     for n in range(N):
-        # aux_coef = A(len(visitable[n]) - m)
-        # aux_coef_len = len(aux_coef)
-        # aux_1.append(symbols_list(aux_coef_len, "aux{}".format(n) + "_{}"))
+        dist_list[-1].append(dist(add[n], cod[s]))
+    dist_order_arg_s_n.append(np.argsort(dist_list[-1]))
+    S_n[dist_order_arg_s_n[-1][0]].add(s)
+    S_n_len[dist_order_arg_s_n[-1][0]] += 1
 
-        # H += l[1][0] * (m + sum(aux_coef[i] * aux_1[-1][i] for i in range(aux_coef_len)) - sum(x[n][i] for i in range(len(visitable[n]))))**2
+dist_list = np.array(dist_list)
 
 
-        aux_coef = A(M)
-        aux_coef_len = len(aux_coef)
-        aux_2.append(symbols_list(aux_coef_len, "aux{}".format(n) + "_{}"))
 
-        H += l[1][0] * (sum(x[n][s] for s in range(len(visitable[n]))) + sum(aux_coef[i] * aux_2[-1][i] for i in range(aux_coef_len)) - M)**2
-
-    for s in range(S):
-        H += l[1][1] * (sum(x[n][i] for n in range(N) for i in range(len(visitable[n])) if s == visitable[n][i]) - 1)**2
-
-    qubo, offset = Compile(H).get_qubo()
-
-    print("Get Qubo")
-
-    # 目的函数
-
-    H = 0
-
+for i in range(100000):
+    S_n_over = []
     for n in range(N):
-        for i in range(len(visitable[n])):
-            for i_ in range(i + 1, len(visitable[n])):
-                add_qubo(qubo, ("x{}_{}".format(n, visitable[n][i]), "x{}_{}".format(n, visitable[n][i_])), l[0] * dist(cod[visitable[n][i]], cod[visitable[n][i_]]))
+        dist_order_arg_n_s.append(np.argsort(dist_list[n]))
+        if S_n_len[n] > int(S / N) * 1.4:
+            S_n_over.append(n)
+    n = S_n_over[np.random.randint(len(S_n_over))]
+    s = list(S_n[n])[np.argsort(dist_list[:, n][list(S_n[n])])[-1]]
 
-    solver = neal.SimulatedAnnealingSampler()
+    rand = np.random.random()
 
-    x = solver.sample_qubo(Q=qubo).first.sample
-
-    # 制約条件を充たすか確認
-
-    Error_num = 0
-
-    # 1
-
-    for n in range(N):
-        S_x = 0
-        for s in visitable[n]:
-            S_x += int(x["x{}_{}".format(n, s)])
-        # if S_x < m or S_x > M:
-        if S_x > M:
-            Error_num += 1
-
-    # 2
-
-    S_n_list = []
+    n_cand = []
+    for n_ in dist_order_arg_s_n[s]:
+        if n_ != n:
+            n_cand.append(n_)
+        if len(n_cand) == 2:
+            break
+    if rand < 1 / (1 + np.exp(-0.0001 * i)):
+        n_cand = n_cand[0]
+    else:
+        n_cand = n_cand[1]
     
-    for s in range(S):
-        S_n = 0
-        for n in range(N):
-            if s in visitable[n]:
-                S_n += int(x["x{}_{}".format(n, s)])
-        S_n_list.append(S_n)
-        if S_n != 1:
-            Error_num += 1
-    
-    if Error_num == 0:
-        global Sn
-        for n in range(N):
-            Sn.append([])
-            for s in visitable[n]:
-                if x["x{}_{}".format(n, s)] == 1:
-                    Sn[-1].append(s)
-        trial.study.stop()
+    S_n[n].remove(s)
+    S_n[n_cand].add(s)
 
-    return Error_num
+    S_n_len[n] -= 1
+    S_n_len[n_cand] += 1
 
-study = optuna.create_study(direction="minimize")
-study.optimize(objective, n_trials=1000)
+print(S_n_len)
 
 #　第二段　各営業マンに対して巡回セールスマンを解く
 
-print("\n\n")
+print("\n")
 
 # それぞれの営業マンが回る順番に看板の番号を並べる
 turn_n = []
@@ -252,16 +210,14 @@ def objective(n, Sn_n, add_n, cod_n):
     return objective_n
 
 for n in range(N):
-    print("営業マン {}".format(n))
+    print("\n営業マン {}".format(n))
 
-    Sn_n = Sn[n]
+    Sn_n = list(S_n[n])
     add_n = add[n]
     cod_n = cod[Sn_n]
 
     study = optuna.create_study(direction="minimize")
     study.optimize(objective(n, Sn_n, add_n, cod_n), n_trials=1000)
-
-print(turn_n)
 
 for n in range(N):
     color = list(np.random.choice(range(256), 3))
@@ -269,7 +225,7 @@ for n in range(N):
     plt.plot(add[n], cod[turn_n[0]], color)
     plt.plot(add[n], cod[turn_n[len(turn_n) - 1]], color)
 
-    for s in len(turn_n) - 1:
+    for s in range(len(turn_n) - 1):
         plt.plot(cod[turn_n[s]], cod[turn_n[s + 1]], color)
 
 plt.show()
