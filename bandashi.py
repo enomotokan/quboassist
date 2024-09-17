@@ -2,7 +2,7 @@ from tytan import symbols, symbols_list, Compile
 import numpy as np
 import neal
 import optuna
-from matplotlib import pyplot as plt, colors
+from matplotlib import pyplot as plt, colors, collections as mc
 import random
 
 def A(n):
@@ -37,6 +37,8 @@ N = 36
 m = 40
 M = 60
 
+color = choose_colors(N)
+
 # 各看板の座標を生成
 
 cod = np.random.rand(S, 2)
@@ -66,76 +68,69 @@ def dist(x, y):
 # 営業マンが訪問可能な看板までの距離
 r = 0.3
 
-# 各営業マンが訪問可能な看板の番号
-visitable = []
-visitable_N = []
-
-for n in range(N):
-    visitable.append([])
-    for s in range(S):
-        if dist(add[n], cod[s]) <= r:
-            visitable[-1].append(s)
-    visitable_N.append(len(visitable[-1]))
-
-print(np.min(visitable_N))
-
-visitable_S = []
-visitable_S_N = []
-for s in range(S):
-    visitable_S.append([])
-    for n in range(N):
-        if dist(add[n], cod[s]) <= r:
-            visitable_S[-1].append(n)
-    visitable_S_N.append(len(visitable_S[-1]))
-print(np.min(visitable_S_N))
-
 # 第一段　クラスタリング
 
+n_cand = [[] for s in range(S)]
 dist_list = []
-dist_order_arg_n_s = []
-dist_order_arg_s_n = []
-S_n = [set() for n in range(N)]
-S_n_len = [0 for n in range(N)]
 
-for s in range(S):
+for n in range(N):
     dist_list.append([])
-    for n in range(N):
+    for s in range(S):
         dist_list[-1].append(dist(add[n], cod[s]))
-    dist_order_arg_s_n.append(np.argsort(dist_list[-1]))
-    S_n[dist_order_arg_s_n[-1][0]].add(s)
-    S_n_len[dist_order_arg_s_n[-1][0]] += 1
+
+    r = 0.01
+
+    while True:
+        dist_n_r = np.array(dist_list[n]) <= r
+        if sum(dist_n_r) > int(S / N) * 3:
+            for s in np.arange(S)[dist_n_r]:
+                n_cand[s].append(n)
+            break
+        r += 0.01
 
 dist_list = np.array(dist_list)
+S_n = [set() for n in range(N)]
+S_n_len = np.zeros(N)
 
-for i in range(100000):
-    S_n_over = []
-    for n in range(N):
-        dist_order_arg_n_s.append(np.argsort(dist_list[n]))
-        if S_n_len[n] > int(S / N) * 1.4:
-            S_n_over.append(n)
-    n = S_n_over[np.random.randint(len(S_n_over))]
-    s = list(S_n[n])[np.argsort(dist_list[:, n][list(S_n[n])])[-1]]
+for s in range(S):
+    if len(n_cand[s]) >= 2:
+        n = n_cand[s][np.argmin(S_n_len[n_cand[s]])]
 
-    rand = np.random.random()
+    elif len(n_cand[s]) == 1:
+        n = n_cand[s][0]
 
-    n_cand = []
-    for n_ in dist_order_arg_s_n[s]:
-        if n_ != n:
-            n_cand.append(n_)
-        if len(n_cand) == 2:
-            break
-    if rand < 1 / (1 + np.exp(-0.0001 * i)):
-        n_cand = n_cand[0]
     else:
-        n_cand = n_cand[1]
+        n = np.argmin(dist_list[:, s])
     
-    S_n[n].remove(s)
-    S_n[n_cand].add(s)
+    S_n[n].add(s)
+    S_n_len[n] += 1
 
-    S_n_len[n] -= 1
-    S_n_len[n_cand] += 1
+# 遠い看板同士を交換
 
-color = choose_colors(N)
+near_n_list = [[] for n in range(N)]
+
+for n in range(N):
+    for n_ in range(n + 1, N):
+        if dist(add[n], add[n_]) <= 0.3:
+            near_n_list[n].append(n_)
+            near_n_list[n_].append(n)
+
+for i in range(1000000):
+    n = np.random.randint(N)
+    n_ = np.random.choice(near_n_list[n])
+
+    s = random.choice(list(S_n[n])[np.argsort(dist_list[n][list(S_n[n])])[:5]])
+    s_ = random.choice(list(S_n[n_])[np.argsort(dist_list[n_][list(S_n[n_])])[:5]])
+
+    # s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
+    # s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
+
+    if dist_list[n, s] + dist_list[n_, s_] > dist_list[n, s_] + dist_list[n_, s]:
+        S_n[n].remove(s)
+        S_n[n].add(s_)
+    
+        S_n[n_].remove(s_)
+        S_n[n_].add(s)
 
 print(S_n_len)
 
@@ -149,18 +144,17 @@ plt.show()
 print("\n")
 
 # それぞれの営業マンが回る順番に看板の番号を並べる
-turn_n = []
+turn_n = [[] for n in range(N)]
+
+value = np.inf
 
 def objective(n, Sn_n, add_n, cod_n):
+
     def objective_n(trial):
         l = [0.001, [trial.suggest_float("l_1", 0, 100), trial.suggest_float("l_2", 0, 100)]]
 
         N_n = len(cod_n)
         qubo = {}
-
-        x_tp = symbols_list((N_n, N_n), "x{}_{}")
-
-        H = 0
 
         # 目的函数
 
@@ -172,7 +166,9 @@ def objective(n, Sn_n, add_n, cod_n):
             for s in range(N_n):
                 for s_ in range(N_n):
                     add_qubo(qubo, ("x{}_{}".format(t, s), "x{}_{}".format(t + 1, s_)), l[0] * dist(cod_n[s], cod_n[s_]))
-                   
+        
+        objective_qubo = qubo
+
         # 制約条件
 
         for s in range(N_n):
@@ -201,24 +197,30 @@ def objective(n, Sn_n, add_n, cod_n):
 
         Error_num = 0
 
-        for n in range(N_n):
+        for s in range(N_n):
             if sum(x["x{}_{}".format(t, s)] for t in range(N_n)) != 1:
                 Error_num += 1
         
         for t in range(N_n):
             if sum(x["x{}_{}".format(t, s)] for s in range(N_n)) != 1:
                 Error_num += 1
+
+        global value
+        result_value = solver.sample_qubo(Q=objective_qubo, num_sweeps=0).first.energy
         
-        if Error_num == 0:
+        if Error_num == 0 and result_value < value:
+
+            value = result_value
+
             global turn_n
             for t in range(N_n):
                 for s in range(N_n):
                     if x["x{}_{}".format(t, s)] == 1:
-                        turn_n.append(Sn_n[s])
+                        turn_n[n].append(Sn_n[s])
 
-            trial.study.stop()
+            # trial.study.stop()
         
-        return Error_num
+        return l[1][0] + l[1][1] + 200 * Error_num
 
     return objective_n
 
@@ -229,14 +231,32 @@ for n in range(N):
     add_n = add[n]
     cod_n = cod[Sn_n]
 
+    value = np.inf
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective(n, Sn_n, add_n, cod_n), n_trials=1000)
+    study.optimize(objective(n, Sn_n, add_n, cod_n), n_trials=200)
+
+
+lines = []
+color_line = []
 
 for n in range(N):
-    plt.plot(add[n], cod[turn_n[0]], color[n])
-    plt.plot(add[n], cod[turn_n[len(turn_n) - 1]], color[n])
+    lines.append([tuple(add[n]), tuple(cod[turn_n[n][0]])])
+    color_line.append(color[n])
 
-    for s in range(len(turn_n) - 1):
-        plt.plot(cod[turn_n[s]], cod[turn_n[s + 1]], color[n])
+    lines.append([tuple(add[n]), tuple(cod[turn_n[n][len(turn_n[n]) - 1]])])
+    color_line.append(color[n])
+
+    for s in range(len(turn_n[n]) - 1):
+        lines.append([tuple(cod[turn_n[n][s]]), tuple(cod[turn_n[n][s + 1]])])
+        color_line.append(color[n])
+
+lc = mc.LineCollection(lines, colors=color_line, linewidth=2)
+
+# 描画
+
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(aspect="1")
+ax.add_collection(lc)
+ax.autoscale()
 
 plt.show()
