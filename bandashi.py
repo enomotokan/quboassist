@@ -119,8 +119,8 @@ for i in range(1000000):
     n = np.random.randint(N)
     n_ = np.random.choice(near_n_list[n])
 
-    s = random.choice(list(S_n[n])[np.argsort(dist_list[n][list(S_n[n])])[:5]])
-    s_ = random.choice(list(S_n[n_])[np.argsort(dist_list[n_][list(S_n[n_])])[:5]])
+    s = random.choice(np.array(list(S_n[n]))[np.argsort(dist_list[n][list(S_n[n])])[:5]])
+    s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(dist_list[n_][list(S_n[n_])])[:5]])
 
     # s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
     # s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
@@ -151,7 +151,7 @@ value = np.inf
 def objective(n, Sn_n, add_n, cod_n):
 
     def objective_n(trial):
-        l = [0.001, [trial.suggest_float("l_1", 0, 100), trial.suggest_float("l_2", 0, 100)]]
+        l = [0.001, [trial.suggest_float("l_1", 0, 10), trial.suggest_float("l_2", 0, 10)]]
 
         N_n = len(cod_n)
         qubo = {}
@@ -220,7 +220,7 @@ def objective(n, Sn_n, add_n, cod_n):
 
             # trial.study.stop()
         
-        return l[1][0] + l[1][1] + 200 * Error_num
+        return l[1][0] + l[1][1] + 20 * Error_num
 
     return objective_n
 
