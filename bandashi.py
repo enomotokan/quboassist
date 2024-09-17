@@ -2,7 +2,8 @@ from tytan import symbols, symbols_list, Compile
 import numpy as np
 import neal
 import optuna
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, colors
+import random
 
 def A(n):
     A = np.array([], np.int64)
@@ -19,6 +20,14 @@ def add_qubo(qubo, key, var):
     else:
         qubo[key] = var
 
+def choose_colors(num_colors):
+  # matplotlib.colors.CSS4_COLORSの値だけをリストにする
+  tmp = list(colors.CSS4_COLORS.values())
+  # リストにしたものをランダムにシャッフルする
+  random.shuffle(tmp)
+  # 必要な数だけ先頭から取り出してreturnする
+  label2color = tmp[:num_colors]
+  return label2color
 
 # 定数
 
@@ -82,7 +91,6 @@ print(np.min(visitable_S_N))
 
 # 第一段　クラスタリング
 
-
 dist_list = []
 dist_order_arg_n_s = []
 dist_order_arg_s_n = []
@@ -98,8 +106,6 @@ for s in range(S):
     S_n_len[dist_order_arg_s_n[-1][0]] += 1
 
 dist_list = np.array(dist_list)
-
-
 
 for i in range(100000):
     S_n_over = []
@@ -129,7 +135,14 @@ for i in range(100000):
     S_n_len[n] -= 1
     S_n_len[n_cand] += 1
 
+color = choose_colors(N)
+
 print(S_n_len)
+
+for n in range(N):
+    for s in list(S_n[n]):
+        plt.scatter(cod[s][0], cod[s][1], c=color[n])
+plt.show()
 
 #　第二段　各営業マンに対して巡回セールスマンを解く
 
@@ -220,12 +233,10 @@ for n in range(N):
     study.optimize(objective(n, Sn_n, add_n, cod_n), n_trials=1000)
 
 for n in range(N):
-    color = list(np.random.choice(range(256), 3))
-    
-    plt.plot(add[n], cod[turn_n[0]], color)
-    plt.plot(add[n], cod[turn_n[len(turn_n) - 1]], color)
+    plt.plot(add[n], cod[turn_n[0]], color[n])
+    plt.plot(add[n], cod[turn_n[len(turn_n) - 1]], color[n])
 
     for s in range(len(turn_n) - 1):
-        plt.plot(cod[turn_n[s]], cod[turn_n[s + 1]], color)
+        plt.plot(cod[turn_n[s]], cod[turn_n[s + 1]], color[n])
 
 plt.show()
