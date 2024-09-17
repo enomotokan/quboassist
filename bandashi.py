@@ -119,8 +119,8 @@ for i in range(1000000):
     n = np.random.randint(N)
     n_ = np.random.choice(near_n_list[n])
 
-    s = random.choice(np.array(list(S_n[n]))[np.argsort(dist_list[n][list(S_n[n])])[:5]])
-    s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(dist_list[n_][list(S_n[n_])])[:5]])
+    s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:10]])
+    s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(-dist_list[n_][list(S_n[n_])])[:10]])
 
     # s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
     # s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
