@@ -115,16 +115,25 @@ for n in range(N):
             near_n_list[n].append(n_)
             near_n_list[n_].append(n)
 
-for i in range(1000000):
+iter = 1000000
+for i in range(iter):
     n = np.random.randint(N)
     n_ = np.random.choice(near_n_list[n])
 
-    s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:10]])
-    s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(-dist_list[n_][list(S_n[n_])])[:10]])
-
-    # s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
+    # if i < iter * 0.7:
+    #     s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
+    #     s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
+    # else:
+    # s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:10]])
     # s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
-
+    if i < iter * 0.7:
+        s = random.choice(np.array(list(S_n[n]))[np.argsort(dist_list[n_][list(S_n[n])])[:10]])
+        s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(dist_list[n][list(S_n[n_])])[:10]])
+    else:
+        s = random.choice(np.array(list(S_n[n]))[np.where(dist_list[n][list(S_n[n])] > np.mean(dist_list[n][list(S_n[n])]))[0]])
+        s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
+        
+    
     if dist_list[n, s] + dist_list[n_, s_] > dist_list[n, s_] + dist_list[n_, s]:
         S_n[n].remove(s)
         S_n[n].add(s_)
