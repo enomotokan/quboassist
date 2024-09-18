@@ -127,10 +127,10 @@ for i in range(iter):
     # s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:10]])
     # s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
     if i < iter * 0.7:
-        s = random.choice(np.array(list(S_n[n]))[np.argsort(dist_list[n_][list(S_n[n])])[:10]])
-        s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(dist_list[n][list(S_n[n_])])[:10]])
+        s = random.choice(np.array(list(S_n[n]))[np.argsort(dist_list[n_][list(S_n[n])])[:20]])
+        s_ = random.choice(np.array(list(S_n[n_]))[np.argsort(dist_list[n][list(S_n[n_])])[:20]])
     else:
-        s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:10]])
+        s = random.choice(np.array(list(S_n[n]))[np.argsort(-dist_list[n][list(S_n[n])])[:20]])
         s_ = random.choice(np.array(list(S_n[n_]))[np.where(dist_list[n_][list(S_n[n_])] > np.mean(dist_list[n_][list(S_n[n_])]))[0]])
     
     
