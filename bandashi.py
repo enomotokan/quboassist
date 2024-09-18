@@ -71,12 +71,11 @@ r = 0.3
 # 第一段　クラスタリング
 
 n_cand = [[] for s in range(S)]
-dist_list = []
+dist_list = [[] for n in range(N)]
 
 for n in range(N):
-    dist_list.append([])
     for s in range(S):
-        dist_list[-1].append(dist(add[n], cod[s]))
+        dist_list[n].append(dist(add[n], cod[s]))
 
     r = 0.01
 
@@ -222,6 +221,7 @@ def objective(n, Sn_n, add_n, cod_n):
             value = result_value
 
             global turn_n
+            turn_n[n] = []
             for t in range(N_n):
                 for s in range(N_n):
                     if x["x{}_{}".format(t, s)] == 1:
