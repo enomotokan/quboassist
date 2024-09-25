@@ -1,1 +1,6 @@
 # quboassist
+
+
+$$
+M = 1
+$$
