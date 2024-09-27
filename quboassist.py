@@ -6,7 +6,8 @@ class Problem:
     def __init__(self):
         self.obj = Formula()
         self.cond = []
-        self.cond_aux_coef = {}
+        self.first_cond_num = cond_num
+        self.cond_aux_M = {}
         self.weight = []
         self.qubo = {}
         self.var_coef = {}
@@ -31,8 +32,8 @@ class Problem:
                     w = float(w)
 
                     if f.comp == ">=":
-                        M = f.const
-                        m = f.const
+                        M = 0
+                        m = 0
 
                         for variable in f.coef_lin:
                             if f.coef_lin[variable] > 0:
@@ -42,20 +43,20 @@ class Problem:
                                 M += f.coef_lin[variable] * variable_range[variable][0]
                                 m += f.coef_lin[variable] * variable_range[variable][1]
                         
-                        if M <= -1:
+                        if M < - f.const:
                             print("Error: This condition cannot be satisfied.")
                             return
-                        elif m >= 0:
+                        elif m >= - f.const:
                             print("This condition is always satisfied.")
                             return
-                        elif M == 0:
+                        elif M == - f.const:
                             f.comp = "=="
                             self.cond.append(f)
                             self.weight.append(w)
                         else:
                             self.cond.append(f)
                             self.weight.append(w)
-                            self.cond_aux_coef[len(self.cond)] = A(M)
+                            self.cond_aux_M[len(self.cond)] = M + f.const
                     else:
                         self.cond.append(f)
                         self.weight.append(w)
@@ -70,19 +71,83 @@ class Problem:
     
     def compile(self):
         for variable in variables.keys():
-            variable_coef[variable] = [variable_range[variable][1], A(variable_range[variable][1] - variable_range[variable][0])]
-        
-        
+            variable_coef[variable] = A(variable_range[variable][1] - variable_range[variable][0])
 
+        # expand quadratic monomials
+
+        for key_col in self.obj.coef_quad:
+            for key_row in self.obj.coef_quad[key_col]:
+                if key_col == key_row:
+                    add_dict(self.obj.coef_lin, key_col, 2 * self.obj.coef_quad[key_col][key_row] * variable_range[key_col][0])
+                else:
+                    add_dict(self.obj.coef_lin, key_col, self.obj.coef_quad[key_col][key_row] * variable_range[key_row][0])
+                    add_dict(self.obj.coef_lin, key_row, self.obj.coef_quad[key_col][key_row] * variable_range[key_col][0])
         
-
-
+        # expand the two power of the left hand side of conditions
         
+        for i in range(len(self.cond)):
+            for key in self.cond[i]:
+                self.cond[i].const += self.cond[i].coef_lin[key] * variable_range[key][0]
 
+            if self.cond[i].comp == "==":
+                key_list = list(self.cond[i].keys())
+                for key_index in range(len(key_list)):
+                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i][key_list[key_index]])
+                    add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.cond[i].coef_lin[key_list[key_index]]**2)
+                    
+                    for key_index_ in range(key_index + 1, len(key_list)):
+                        if variables[key_list[key_index]] >= variables[key_list[key_index_]]:
+                            key_index, key_index_ = key_index_, key_index
+                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i][key_list[key_index]] * self.cond[i][key_list[key_index_]])                      
+
+            else:
+                variable_coef["aux{}%".format(self.first_cond_num + i)] = A(self.cond_aux_M[i])
+                add_LIL(self.obj.coef_quad, "aux{}%".format(self.first_cond_num + i), "aux{}%".format(self.first_cond_num + i), self.weight[i])
+
+                for key_index in range(len(key_list)):
+                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i][key_list[key_index]])
+                    add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.cond[i].coef_lin[key_list[key_index]]**2)
+                    
+                    for key_index_ in range(key_index + 1, len(key_list)):
+                        if variables[key_list[key_index]] >= variables[key_list[key_index_]]:
+                            key_index, key_index_ = key_index_, key_index
+                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i][key_list[key_index]] * self.cond[i][key_list[key_index_]])                      
+
+                    add_LIL(self.obj.coef_quad, key_list[key_index], "aux{}%".format(self.first_cond_num + i), - self.weight[i] * 2 * self.cond[i][key_list[key_index]])
+
+        obj_bin_coef_LIL = {}
+
+        for key_col in self.obj.coef_quad:
+            for key_row in self.obj.coef_quad[key_col]:
+                if key_col == key_row:
+                    for i in range(len(variable_coef[key_col])):
+                        add_LIL(obj_bin_coef_LIL, key_col + "%" + str(i), key_row + "%" + str(i), self.obj.coef_quad[key_col][key_row] * variable_coef[key_col][i] * variable_coef[key_col][i])
+                        for j in range(i + 1, len(variable_coef[key_row])):
+                            add_LIL(obj_bin_coef_LIL, key_col + "%" + str(i), key_row + "%" + str(j), self.obj.coef_quad[key_col][key_row] * 2 * variable_coef[key_col][i] * variable_coef[key_col][j])
+                else:
+                    for i in range(len(variable_coef[key_col])):
+                        for j in range(len(variable_coef[key_row])):
+                            add_LIL(obj_bin_coef_LIL, key_col + "%" + str(i), key_row + "%" + str(j), self.obj.coef_quad[key_col][key_row] * variable_coef[key_col][i] * variable_coef[key_row][j])
+
+        for key in self.obj.coef_lin:
+            for i in range(len(variable_coef[key])):
+                add_LIL(obj_bin_coef_LIL, key + "%" + str(i), key + "%" + str(i), self.obj.coef_lin[key] * variable_coef[key][i])
+        
+        for key_col in obj_bin_coef_LIL:
+            for key_row in obj_bin_coef_LIL[key_col]:
+                self.qubo[(key_col, key_row)] = obj_bin_coef_LIL[key_col][key_row]
+
+    def solution(self, result):
+        solution = {}
+        for key in variables:
+            for i in range(len(variable_coef[key])):
+                add_dict(solution, key, variable_coef[key][i] * result[key + "%" + str(i)])
+        return solution
 
 variables = {}
 variable_range = {}
 variable_coef = {}
+cond_num = 0
 
 class Formula:
     def __init__(self):
@@ -145,10 +210,7 @@ class Formula:
                         F.coef_quad[key_col][key_row] *= -1
 
             for key in g.coef_lin.keys():
-                if key in F.coef_lin:
-                    F.coef_lin[key] += sign[1] * g.coef_lin[key]
-                else:
-                    F.coef_lin[key] = sign[1] * g.coef_lin[key]
+                add_dict(F.coef_lin, key, sign[1] * g.coef_lin[key])
             
             for key_col in g.coef_quad.keys():
                 for key_row in g.coef_quad[key_col].keys():
@@ -223,10 +285,7 @@ class Formula:
             
             if f.const != 0:
                 for key in g.coef_lin.keys():
-                    if key in F.coef_lin:
-                        F.coef_lin[key] += f.const * g.coef_lin[key]
-                    else:
-                        F.coef_lin[key] = f.const * g.coef_lin[key]
+                    add_dict(F.coef_lin, key, f.const * g.coef_lin[key])
 
             # coefficients of quadratic terms
 
@@ -327,8 +386,8 @@ class Variable(Formula):
         elif string in variables.keys():
             print("Error: There is already a variable with the same name \'{}\'.".format(string))
             return
-        elif string[-1] == "%":
-            print("Error: The last character of a variable name must not be %.")
+        elif "%" in string:
+            print("Error: The variable name cannot include the character %.")
         else:
             self.name = string
             variables[string] = len(variables)
@@ -377,3 +436,11 @@ def add_LIL(LIL, col, row, num):
         LIL[col] = {row: num}
 
     return LIL
+
+def add_dict(dict_coef, var, num):
+    if var in dict_coef:
+        dict_coef[var] += num
+    else:
+        dict_coef[var] = num
+
+    return dict_coef
