@@ -11,6 +11,7 @@ class Problem:
         self.weight = []
         self.qubo = {}
         self.var_coef = {}
+        self.variables = set()
 
     def add_objective(self, f):
         if type(f) == Variable or type(f) == Formula:
@@ -54,9 +55,9 @@ class Problem:
                             self.cond.append(f)
                             self.weight.append(w)
                         else:
+                            self.cond_aux_M[len(self.cond)] = M + f.const
                             self.cond.append(f)
                             self.weight.append(w)
-                            self.cond_aux_M[len(self.cond)] = M + f.const
                     else:
                         self.cond.append(f)
                         self.weight.append(w)
@@ -70,7 +71,19 @@ class Problem:
             return
     
     def compile(self):
-        for variable in variables.keys():
+        self.variables |= set(self.obj.coef_quad.keys())
+        
+        for key_col in self.obj.coef_quad:
+            self.variables.add(key_col)
+            for key_row in self.obj.coef_quad:
+                self.variables |= self.variables[key_col].keys()
+        
+        self.variables |=self.obj.coef_lin.keys()
+
+        for i in range(len(self.cond)):
+            self.variables |= set(self.cond[i].coef_lin)
+
+        for variable in self.variables:
             variable_coef[variable] = A(variable_range[variable][1] - variable_range[variable][0])
 
         # expand quadratic monomials
@@ -86,7 +99,7 @@ class Problem:
         # expand the two power of the left hand side of conditions
         
         for i in range(len(self.cond)):
-            for key in self.cond[i]:
+            for key in self.cond[i].coef_lin:
                 self.cond[i].const += self.cond[i].coef_lin[key] * variable_range[key][0]
 
             if self.cond[i].comp == "==":
@@ -104,16 +117,18 @@ class Problem:
                 variable_coef["aux{}%".format(self.first_cond_num + i)] = A(self.cond_aux_M[i])
                 add_LIL(self.obj.coef_quad, "aux{}%".format(self.first_cond_num + i), "aux{}%".format(self.first_cond_num + i), self.weight[i])
 
+                key_list = list(self.cond[i].coef_lin.keys())
+                
                 for key_index in range(len(key_list)):
-                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i][key_list[key_index]])
+                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i].coef_lin[key_list[key_index]])
                     add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.cond[i].coef_lin[key_list[key_index]]**2)
                     
                     for key_index_ in range(key_index + 1, len(key_list)):
                         if variables[key_list[key_index]] >= variables[key_list[key_index_]]:
                             key_index, key_index_ = key_index_, key_index
-                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i][key_list[key_index]] * self.cond[i][key_list[key_index_]])                      
+                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]] * self.cond[i].coef_lin[key_list[key_index_]])                      
 
-                    add_LIL(self.obj.coef_quad, key_list[key_index], "aux{}%".format(self.first_cond_num + i), - self.weight[i] * 2 * self.cond[i][key_list[key_index]])
+                    add_LIL(self.obj.coef_quad, key_list[key_index], "aux{}%".format(self.first_cond_num + i), - self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]])
 
         obj_bin_coef_LIL = {}
 
@@ -139,10 +154,27 @@ class Problem:
 
     def solution(self, result):
         solution = {}
-        for key in variables:
+        for key in self.variables:
             for i in range(len(variable_coef[key])):
-                add_dict(solution, key, variable_coef[key][i] * result[key + "%" + str(i)])
-        return solution
+                add_dict(solution, key, variable_coef[key][i] * result[key + "%" + str(i)] + variable_range[key][0])
+
+        # ckeck whether the solution satisfies constraint conditions
+
+        bool_solution = []
+
+        for i in range(len(self.cond)):
+            if self.cond[i].comp == "==":
+                S = self.cond[i].const
+                for key in self.cond[i].coef_lin:
+                    S += self.cond[i].coef_lin[key] * solution[key]
+                    bool_solution.append(S == 0)
+            if self.cond[i].comp == ">=":
+                S = self.cond[i].const
+                for key in self.cond[i].coef_lin:
+                    S += self.cond[i].coef_lin[key] * solution[key]
+                    bool_solution.append(S >= 0)
+                
+        return solution, bool_solution
 
 variables = {}
 variable_range = {}
