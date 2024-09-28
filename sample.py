@@ -7,7 +7,7 @@ from copy import copy
 x = [quboassist.Variable("x{}".format(i), 0, 3) for i in range(10)]
 
 best_solution = []
-best_obj = 100
+best_val = np.inf
 
 def objective(trial):
 
@@ -25,22 +25,23 @@ def objective(trial):
     P.add_constraint(w[1], h)
 
     P.compile()
-    
+
     sampler = neal.SimulatedAnnealingSampler()
-    result = sampler.sample_qubo(P.qubo).first.sample
-    solution = P.solution(result)
+    result = sampler.sample_qubo(P.qubo).first
+    solution = P.solution(result.sample)
     
     obj = w[0] + w[1] + 10 * sum(np.logical_not(solution[1]))
+    val = result.energy
 
-    global best_solution, best_obj
+    global best_solution, best_val
     
-    if obj < best_obj:
-        best_obj = obj
+    if val < best_val:
+        best_val = val
         best_solution = copy(solution)
     
     return obj
 
 study = optuna.create_study(direction="minimize")
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=15)
 
 print(best_solution)
