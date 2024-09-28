@@ -8,8 +8,7 @@ This is a package to generate QUBO which can be input to dwave-neal simulated an
 
 This package converts the problem below into QUBO form which can be input directly to dwave-neal package:
 $$
-{\rm minimize}\ \ \ f(x) =x^t Ax\\
-s.t. \ \ \ \forall i, a_i \leq x_i\leq b_i,x_i\in\mathbb Z
+m = 1
 $$
 i.e. a problem where the objective function is quadratic and all variables are bounded and integer.
 
