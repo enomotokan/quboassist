@@ -15,6 +15,10 @@ $$
 s.t. \ \ \ \forall i, a_i \leq x_i\leq b_i,x_i\in\mathbb Z
 $$
 
+$$
+\forall j, \sum_ kc_{jk} x_k \geq d_j
+$$
+
 
 
 where $A$ is a symmetric real matrix. I.e. a problem where the objective function is quadratic and all variables are bounded and integer.
@@ -31,7 +35,7 @@ import neal
 There are three classes: `Variable`, `Formula`, `Problem`. Using `Variable` class, we can define variables.
 
 ```
-x = [Variables("x{}".format(i), 2, 5) for i in range(10)]
+x = [Variable("x{}".format(i), 2, 5) for i in range(10)]
 ```
 
 The fist component of input is the name of the variable. The second is the minimum value and the last is the maximum value, so this variable "x" takes $2,3,4,5$​.
@@ -40,15 +44,15 @@ The fist component of input is the name of the variable. The second is the minim
 
 ```
 f = x[0]**2 + 3 * x[1]
-g = x[0] > 5 * x[1]
+g = x[0] > 2 * x[1]
 ```
 
 then `f`,  `g` are instances of `Formula`. Finally, we can define a problem using `Problem`.
 
 ```
 P = Problem() 
-Problem.add_objective(f)
-Problem.add_constraint(10, g)
+P.add_objective(f)
+P.add_constraint(10, g)
 ```
 
 where the first input of `add_constraint` method is the weight of the constraint. Finally, we can get QUBO by `compile` method.
