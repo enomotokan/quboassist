@@ -21,7 +21,7 @@ $$
 
 
 
-where $A$ is a symmetric real matrix. I.e. a problem where the objective function is quadratic and all variables are bounded and integer.
+where $A$ is a symmetric real matrix. I.e. problems where the objective function is quadratic and all variables are bounded and integer.
 
 # How  to use
 

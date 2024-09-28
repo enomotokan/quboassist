@@ -156,8 +156,9 @@ class Problem:
         solution = {}
         for key in self.variables:
             if key[:3] != "aux":
+                add_dict(solution, key, variable_range[key][0])
                 for i in range(len(variable_coef[key])):
-                    add_dict(solution, key, variable_coef[key][i] * int(result[key + "%" + str(i)]) + variable_range[key][0])
+                    add_dict(solution, key, variable_coef[key][i] * int(result[key + "%" + str(i)]))
 
         # ckeck whether the solution satisfies constraint conditions
 
