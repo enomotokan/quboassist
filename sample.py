@@ -25,11 +25,12 @@ def objective(trial):
     P.add_constraint(w[1], h)
 
     P.compile()
+    
     sampler = neal.SimulatedAnnealingSampler()
     result = sampler.sample_qubo(P.qubo).first.sample
     solution = P.solution(result)
     
-    obj = w[0] + w[1] + 5 * sum(np.logical_not(solution[1]))
+    obj = w[0] + w[1] + 10 * sum(np.logical_not(solution[1]))
 
     global best_solution, best_obj
     

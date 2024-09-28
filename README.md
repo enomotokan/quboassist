@@ -16,12 +16,12 @@ s.t. \ \ \ \forall i, a_i \leq x_i\leq b_i,x_i\in\mathbb Z
 $$
 
 $$
-\forall j, \sum_ kc_{jk} x_k \geq d_j
+\forall j, \sum_ kc_{jk} x_k \geq d_j\ \ (c_{jk}, d_j \in \mathbb Z)
 $$
 
 
 
-where $A$ is a symmetric real matrix. I.e. problems where the objective function is quadratic and all variables are bounded and integer.
+where $A$ is a symmetric real matrix. I.e. problems where the objective function is quadratic, all variables are bounded and integer, all constraints are linear and their all coefficients are integer.
 
 # How  to use
 
@@ -66,23 +66,21 @@ solution = P.solution(result)
 print(solution)
 ```
 
-The solution almost always is below .
+The solution is almost always below .
 
 ```
 ({'x0': 5, 'x1': 4}, [True])
 ```
 
-`The second component means whether the solution satisfies each constraint conditions. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to care of it. 
+The second component means whether the solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to it. 
 
-In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. We propose to use a library called optuna to tune these hyperparameter $w_i$.
-
-
+In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. Therefore we propose to use a library called optuna to tune these hyperparameter $w_i$.
 
 A sample code is showed below.
 
 ```
-import neal
 import quboassist
+import neal
 import optuna
 import numpy as np
 from copy import copy
@@ -108,11 +106,12 @@ def objective(trial):
     P.add_constraint(w[1], h)
 
     P.compile()
+    
     sampler = neal.SimulatedAnnealingSampler()
     result = sampler.sample_qubo(P.qubo).first.sample
     solution = P.solution(result)
     
-    obj = w[0] + w[1] + 5 * sum(np.logical_not(solution[1]))
+    obj = w[0] + w[1] + 10 * sum(np.logical_not(solution[1]))
 
     global best_solution, best_obj
     
