@@ -4,6 +4,15 @@
 
 This is a package to generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem.
 
+# What problems is it applicable to?
+
+This package converts the problem below into QUBO form which can be input directly to dwave-neal package:
+$$
+{\rm minimize}\ \ \ f(x) =x^t Ax\\
+s.t. \ \ \ \forall i, a_i \leq x_i\leq b_i,x_i\in\mathbb Z
+$$
+i.e. a problem where the objective function is quadratic and all variables are bounded and integer.
+
 # How  to use
 
 First, import the all classes of quboassist.
