@@ -5,6 +5,8 @@ This is a package to generate QUBO which can be input to dwave-neal simulated an
 # What problems is it applicable to?
 
 This package converts the problem below into QUBO form which can be input directly to dwave-neal package:
+
+
 $$
 {\rm minimize}\ \ \ f(x) =x^t Ax\\
 $$
@@ -15,7 +17,7 @@ $$
 
 
 
-i.e. a problem where the objective function is quadratic and all variables are bounded and integer.
+where $A$ is a symmetric real matrix. I.e. a problem where the objective function is quadratic and all variables are bounded and integer.
 
 # How  to use
 
