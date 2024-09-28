@@ -36,14 +36,14 @@ x = [Variables("x{}".format(i), 2, 5) for i in range(10)]
 
 The fist component of input is the name of the variable. The second is the minimum value and the last is the maximum value, so this variable "x" takes $2,3,4,5$​.
 
-Formula is a class which is generated automatically when variables are operated. For example, 
+`Formula` is a class which is generated automatically when variables are operated. For example, 
 
 ```
 f = x[0]**2 + 3 * x[1]
 g = x[0] > 5 * x[1]
 ```
 
-Then `f`,  `g` are instances of `Formula`. Finally, we can define a problem using `Problem`.
+then `f`,  `g` are instances of `Formula`. Finally, we can define a problem using `Problem`.
 
 ```
 P = Problem() 
@@ -62,7 +62,7 @@ solution = P.solution(result)
 print(solution)
 ```
 
-An sample code is showed below.
+A sample code is showed below.
 
 ```
 import neal
