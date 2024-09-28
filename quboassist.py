@@ -25,8 +25,8 @@ class Problem:
     
     def add_constraint(self, w, f):
         if type(f) == Variable or type(f) == Formula:
-            if f.comp != (">=" or "=="):
-                print("Error: The input f must be a function, not an equation or an inequation.")
+            if f.comp != ">=" and f.comp != "==":
+                print("Error: The input f must be an equation or an inequation, not a function.")
                 return
             else:
                 try:
@@ -75,13 +75,12 @@ class Problem:
         
         for key_col in self.obj.coef_quad:
             self.variables.add(key_col)
-            for key_row in self.obj.coef_quad:
-                self.variables |= self.variables[key_col].keys()
+            self.variables |= set(self.obj.coef_quad[key_col].keys())
         
         self.variables |=self.obj.coef_lin.keys()
 
         for i in range(len(self.cond)):
-            self.variables |= set(self.cond[i].coef_lin)
+            self.variables |= set(self.cond[i].coef_lin.keys())
 
         for variable in self.variables:
             variable_coef[variable] = A(variable_range[variable][1] - variable_range[variable][0])
@@ -99,28 +98,14 @@ class Problem:
         # expand the two power of the left hand side of conditions
         
         for i in range(len(self.cond)):
+            const = self.cond[i].const
             for key in self.cond[i].coef_lin:
-                self.cond[i].const += self.cond[i].coef_lin[key] * variable_range[key][0]
+                const += self.cond[i].coef_lin[key] * variable_range[key][0]
 
             if self.cond[i].comp == "==":
-                key_list = list(self.cond[i].keys())
-                for key_index in range(len(key_list)):
-                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i][key_list[key_index]])
-                    add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.cond[i].coef_lin[key_list[key_index]]**2)
-                    
-                    for key_index_ in range(key_index + 1, len(key_list)):
-                        if variables[key_list[key_index]] >= variables[key_list[key_index_]]:
-                            key_index, key_index_ = key_index_, key_index
-                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i][key_list[key_index]] * self.cond[i][key_list[key_index_]])                      
-
-            else:
-                variable_coef["aux{}%".format(self.first_cond_num + i)] = A(self.cond_aux_M[i])
-                add_LIL(self.obj.coef_quad, "aux{}%".format(self.first_cond_num + i), "aux{}%".format(self.first_cond_num + i), self.weight[i])
-
                 key_list = list(self.cond[i].coef_lin.keys())
-                
                 for key_index in range(len(key_list)):
-                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * self.cond[i].const * self.cond[i].coef_lin[key_list[key_index]])
+                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * const * self.cond[i].coef_lin[key_list[key_index]])
                     add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.cond[i].coef_lin[key_list[key_index]]**2)
                     
                     for key_index_ in range(key_index + 1, len(key_list)):
@@ -128,8 +113,23 @@ class Problem:
                             key_index, key_index_ = key_index_, key_index
                         add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]] * self.cond[i].coef_lin[key_list[key_index_]])                      
 
-                    add_LIL(self.obj.coef_quad, key_list[key_index], "aux{}%".format(self.first_cond_num + i), - self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]])
+            else:
+                variable_coef["aux{}%".format(self.first_cond_num + i)] = A(self.cond_aux_M[i])
+                add_dict(self.obj.coef_lin, "aux{}%".format(self.first_cond_num + i), - 2 * self.weight[i] * const * 2)
+                add_LIL(self.obj.coef_quad, "aux{}%".format(self.first_cond_num + i), "aux{}%".format(self.first_cond_num + i), self.weight[i])
 
+                key_list = list(self.cond[i].coef_lin.keys())
+                
+                for key_index in range(len(key_list)):
+                    add_dict(self.obj.coef_lin, key_list[key_index], self.weight[i] * 2 * const * self.cond[i].coef_lin[key_list[key_index]])
+                    add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index], self.weight[i] * self.cond[i].coef_lin[key_list[key_index]]**2)
+                    
+                    for key_index_ in range(key_index + 1, len(key_list)):
+                        if variables[key_list[key_index]] >= variables[key_list[key_index_]]:
+                            key_index, key_index_ = key_index_, key_index
+                        add_LIL(self.obj.coef_quad, key_list[key_index], key_list[key_index_], self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]] * self.cond[i].coef_lin[key_list[key_index_]])                      
+
+                    add_LIL(self.obj.coef_quad, key_list[key_index], "aux{}%".format(self.first_cond_num + i), - self.weight[i] * 2 * self.cond[i].coef_lin[key_list[key_index]])
         obj_bin_coef_LIL = {}
 
         for key_col in self.obj.coef_quad:
@@ -155,8 +155,9 @@ class Problem:
     def solution(self, result):
         solution = {}
         for key in self.variables:
-            for i in range(len(variable_coef[key])):
-                add_dict(solution, key, variable_coef[key][i] * result[key + "%" + str(i)] + variable_range[key][0])
+            if key[:3] != "aux":
+                for i in range(len(variable_coef[key])):
+                    add_dict(solution, key, variable_coef[key][i] * int(result[key + "%" + str(i)]) + variable_range[key][0])
 
         # ckeck whether the solution satisfies constraint conditions
 
@@ -167,12 +168,12 @@ class Problem:
                 S = self.cond[i].const
                 for key in self.cond[i].coef_lin:
                     S += self.cond[i].coef_lin[key] * solution[key]
-                    bool_solution.append(S == 0)
-            if self.cond[i].comp == ">=":
+                bool_solution.append(S == 0)
+            else:
                 S = self.cond[i].const
                 for key in self.cond[i].coef_lin:
                     S += self.cond[i].coef_lin[key] * solution[key]
-                    bool_solution.append(S >= 0)
+                bool_solution.append(S >= 0)
                 
         return solution, bool_solution
 
@@ -351,8 +352,13 @@ class Formula:
         F = Formula()
         F.order = self.order
 
-        for key in self.coefficients.keys():
-            F.coefficients[key] = - self.coefficients[key]
+        for key in self.coef_lin.keys():
+            F.coef_lin[key] = - self.coef_lin[key]
+        
+        for key_col in self.coef_quad.keys():
+            for key_row in self.coef_quad[key_col].keys():
+                add_LIL(F.coef_quad, key_col, key_row, - self.coef_quad[key_col][key_row])
+
         return F
 
     def __lt__(self, other):
@@ -379,7 +385,10 @@ class Formula:
             F.comp = ">="
             return F
     
-    def __eq__(self, F):
+    def __eq__(self, f):
+        # ==
+
+        F = self - f
         if F.order >= 2:
             print("Error: The equation must be linear.")
             return
@@ -418,8 +427,8 @@ class Variable(Formula):
         elif string in variables.keys():
             print("Error: There is already a variable with the same name \'{}\'.".format(string))
             return
-        elif "%" in string:
-            print("Error: The variable name cannot include the character %.")
+        elif string[:3] == "aux":
+            print("Error: The first three characters variable name cannot be \'aux\'.")
         else:
             self.name = string
             variables[string] = len(variables)
@@ -467,7 +476,7 @@ def add_LIL(LIL, col, row, num):
     else:
         LIL[col] = {row: num}
 
-    return LIL
+    return
 
 def add_dict(dict_coef, var, num):
     if var in dict_coef:
@@ -475,4 +484,4 @@ def add_dict(dict_coef, var, num):
     else:
         dict_coef[var] = num
 
-    return dict_coef
+    return
