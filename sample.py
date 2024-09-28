@@ -32,6 +32,8 @@ def objective(trial):
     
     obj = w[0] + w[1] + 10 * sum(np.logical_not(solution[1]))
     val = result.energy
+    
+    # Note that result.energy and the value of objective function may differ by a constant which appears when expanding the product of variables!
 
     global best_solution, best_val
     

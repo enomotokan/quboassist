@@ -1,8 +1,8 @@
 # quboassist
 
-This is a package to generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem.
+This is a package to generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem from the output.
 
-# What problems is it applicable to?
+## What problems is it applicable to?
 
 This package converts the problem below into QUBO form which can be input directly to dwave-neal package:
 
@@ -23,7 +23,7 @@ $$
 
 where $A$ is a symmetric real matrix. I.e. problems where the objective function is quadratic, all variables are bounded and integer, all constraints are linear and their all coefficients are integer.
 
-# How  to use
+## How  to use
 
 First, import the all classes of quboassist.
 
@@ -38,9 +38,14 @@ There are three classes: `Variable`, `Formula`, `Problem`. Using `Variable` clas
 x = [Variable("x{}".format(i), 2, 5) for i in range(10)]
 ```
 
-The fist component of input is the name of the variable. The second is the minimum value and the last is the maximum value, so this variable "x" takes $2,3,4,5$​.
+The fist component of input is the name of the variable. The second is the minimum value and the last is the maximum value, so this variable "x" takes $2,3,4,5$​.  If you want to change the passible values of the variable, you can do the following.
 
-`Formula` is a class which is generated automatically when variables are operated. For example, 
+```
+x[4].change_max(4)
+x[5].change_min(-2)
+```
+
+`Formula` is a class whose instance is generated automatically when variables are operated. For example, 
 
 ```
 f = - x[0]**2 -  3 * x[1]
@@ -72,9 +77,9 @@ The solution is almost always below .
 ({'x0': 5, 'x1': 4}, [True])
 ```
 
-The second component means whether the solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to it. 
+The second component means whether the solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to the second component. 
 
-In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. Therefore we propose to use a library called optuna to tune these hyperparameter $w_i$.
+In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. Therefore we propose to use a library called optuna to tune these hyperparameters $w_i$.
 
 A sample code is showed below.
 
@@ -113,6 +118,8 @@ def objective(trial):
     
     obj = w[0] + w[1] + 10 * sum(np.logical_not(solution[1]))
     val = result.energy
+    
+    # Note that result.energy and the value of objective function may differ by a constant which appears when expanding the product of variables!
 
     global best_solution, best_val
     
@@ -127,4 +134,16 @@ study.optimize(objective, n_trials=15)
 
 print(best_solution)
 ```
+
+# What kind of technique is used?
+
+
+
+The core is as below:
+
+
+
+*Lemma*
+
+
 
