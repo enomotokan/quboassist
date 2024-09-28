@@ -2,6 +2,9 @@
 
 $$
 {\rm minimize}\ \ \ f(x) =x^t Ax\\
+$$
+
+$$
 s.t. \ \ \ \forall i, a_i \leq x_i\leq b_i,x_i\in\mathbb Z
 $$
 
