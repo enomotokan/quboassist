@@ -175,7 +175,7 @@ Output: $A(n)$
 
 *Lemma*
 
-For all $ n \in \mathbb N$, the sequence $A(n)$​ is finite and the length is at most
+For all $n \in \mathbb N$, the sequence $A(n)$​ is finite and the length is at most
 
 
 $$
@@ -189,6 +189,8 @@ Moreover, a function $f: [0,1]^k \rightarrow \mathbb N$ defined as:
 $$
 f(x_1,x_2,...,x_k):= \sum_{i =1}^k A_i(n) x_i
 $$
+
+
 takes the all numbers $0,...,n$ and no other values.
 
 
@@ -204,6 +206,8 @@ $$
 
 
 i.e.
+
+
 $$
 A_1(n)=2^{\lfloor\log_2(n_1 +1)\rfloor-1}\geq \frac{1}{2}A_0(n)
 $$
@@ -223,6 +227,8 @@ i.e.
 $$
 A_2(n)=2^{\lfloor\log_2(n_2 +1)\rfloor-1}<A_1(n).
 $$
+
+
 Hence the same number appears at most two times in $A(n)$ and the exponent $\lfloor\log_2(n_k +1)\rfloor-1$ is monotonically non-increasing, thus the length of $A(n)$ is at most
 
 
@@ -246,6 +252,8 @@ Therefore, numbers $0,...,2A_0(n)-1$​ can be expressed as
 $$
  \sum_{i=1}^kA_i(n)x_i
 $$
+
+
 and numbers $n-2A_0(n),...,n$​ can be expressed as
 
 
@@ -260,6 +268,8 @@ Since
 $$
 n-2A_0(n)< 2A_0(n) -1,
 $$
+
+
 finally all numbers $0,...,n$​​ can be expressed as
 
 
@@ -268,6 +278,6 @@ $$
 $$
 
 <div style="text-align: right;">
-$\square$
+□
 </div>
 

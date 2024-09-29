@@ -1,5 +1,0 @@
-numpy
-
-[dev]
-build
-twine
