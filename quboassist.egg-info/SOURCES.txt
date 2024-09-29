@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+quboassist/__init__.py
+quboassist.egg-info/PKG-INFO
+quboassist.egg-info/SOURCES.txt
+quboassist.egg-info/dependency_links.txt
+quboassist.egg-info/entry_points.txt
+quboassist.egg-info/requires.txt
+quboassist.egg-info/top_level.txt

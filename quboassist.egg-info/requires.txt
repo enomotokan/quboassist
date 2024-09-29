@@ -1,0 +1,6 @@
+numpy
+dwave-neal
+
+[dev]
+build
+twine
