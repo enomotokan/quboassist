@@ -1,1 +1,1 @@
-from main import Variable, Formula, Problem
+from .main import Variable, Formula, Problem

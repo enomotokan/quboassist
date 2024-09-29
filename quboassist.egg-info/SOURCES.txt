@@ -2,6 +2,7 @@ LICENSE
 README.md
 pyproject.toml
 quboassist/__init__.py
+quboassist/main.py
 quboassist.egg-info/PKG-INFO
 quboassist.egg-info/SOURCES.txt
 quboassist.egg-info/dependency_links.txt

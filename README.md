@@ -1,3 +1,7 @@
+```
+
+```
+
 # quboassist
 
 This is a package to generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem from the output.
@@ -77,7 +81,7 @@ The solution is almost always below .
 ({'x0': 5, 'x1': 4}, [True])
 ```
 
-The second component means whether the solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to the second component. 
+The second component means whether each solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to the second component. 
 
 In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. Therefore we propose to use a library called optuna to tune these hyperparameters $w_i$.
 
@@ -135,15 +139,135 @@ study.optimize(objective, n_trials=15)
 print(best_solution)
 ```
 
-# What kind of technique is used?
+
+
+## What kind of technique is used?
 
 
 
-The core is as below:
+The core is as below. We leave it to the reader to consider how to use this to represent any bounded integer variable as a linear combination of a constant and a binary variable, and to convert an inequality into an equality.
+
+
+
+Algorithm
+
+------
+
+Input: $n$
+
+Output: $A(n)$
+
+​        Define $A_0(n) \leftarrow 2^{\lfloor \log_2 (n + 1) \rfloor - 1}, n_1 \leftarrow n - A_0(n), k \leftarrow 0$
+
+​        while $n_{k+1} \neq 0$ do
+
+​                $A_{k + 1}(n) \leftarrow 2^{\lfloor \log_2 (n_{k + 1} + 1) \rfloor - 1}$	
+
+​                $k \leftarrow k + 1$
+
+​                $n_{k + 1}\leftarrow n_k - A_k(n)$
+
+​        end while
+
+------
 
 
 
 *Lemma*
 
+For all $ n \in \mathbb N$, the sequence $A(n)$​ is finite and the length is at most
 
+
+$$
+2\lfloor\log_2(n +1)\rfloor.
+$$
+  
+
+Moreover, a function $f: [0,1]^k \rightarrow \mathbb N$ defined as:
+
+
+$$
+f(x_1,x_2,...,x_k):= \sum_{i =1}^k A_i(n) x_i
+$$
+takes the all numbers $0,...,n$ and no other values.
+
+
+
+*Proof.*
+
+Since $A_0(n)$ is the only power of two which satisfies $4A_0(n)> n+1 \geq 2 A_0(n)$, 
+
+
+$$
+n - A_0(n) \geq A_0(n)-1
+$$
+
+
+i.e.
+$$
+A_1(n)=2^{\lfloor\log_2(n_1 +1)\rfloor-1}\geq \frac{1}{2}A_0(n)
+$$
+
+
+holds if $n_1 \neq 0$. Therefore if $A_0(n) \geq 2$, then $A_1(n) = A_0(n)$ or $A_1(n) =\frac{1}{2} A_0(n)$. Moreover, in the case that the first two numbers of $A(n)$​ is same, 
+
+
+$$
+n_2=n-2A_1(n)<2A_1(n)-1
+$$
+
+
+i.e.
+
+
+$$
+A_2(n)=2^{\lfloor\log_2(n_2 +1)\rfloor-1}<A_1(n).
+$$
+Hence the same number appears at most two times in $A(n)$ and the exponent $\lfloor\log_2(n_k +1)\rfloor-1$ is monotonically non-increasing, thus the length of $A(n)$ is at most
+
+
+$$
+2\lfloor\log_2(n +1)\rfloor,
+$$
+
+
+moreover by the same reason, we also conclude the sequence $A(n)$ includes all powers of two
+less than or equal to
+
+
+$$
+2^{\lfloor\log_2(n +1)\rfloor-1}(= A_0(n)).
+$$
+
+
+Therefore, numbers $0,...,2A_0(n)-1$​ can be expressed as
+
+
+$$
+ \sum_{i=1}^kA_i(n)x_i
+$$
+and numbers $n-2A_0(n),...,n$​ can be expressed as
+
+
+$$
+n-\sum_{i=1}^kA_i(n)y_i=\sum_{i=1}^kA_i(n)(1-y_i).
+$$
+   
+
+Since
+
+
+$$
+n-2A_0(n)< 2A_0(n) -1,
+$$
+finally all numbers $0,...,n$​​ can be expressed as
+
+
+$$
+\sum_{i=1}^kA_i(n)x_i.
+$$
+
+<div style="text-align: right;">
+$\square$
+</div>
 

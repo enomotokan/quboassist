@@ -20,7 +20,7 @@ keywords = [
     "Simulated annealing",
 ]
 
-dependencies = ["numpy", "dwave-neal"]
+dependencies = ["numpy"]
 
 [project.urls]
 "Homepage" = "https://github.com/enomotokan/quboassist"

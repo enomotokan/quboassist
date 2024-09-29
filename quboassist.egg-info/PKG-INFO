@@ -34,7 +34,6 @@ Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy
-Requires-Dist: dwave-neal
 Provides-Extra: dev
 Requires-Dist: build; extra == "dev"
 Requires-Dist: twine; extra == "dev"
@@ -118,7 +117,7 @@ The solution is almost always below .
 ({'x0': 5, 'x1': 4}, [True])
 ```
 
-The second component means whether the solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to the second component. 
+The second component means whether each solution satisfies each constraint conditions. In the above case, because $5 > 4$, the return is true. Note that heuristic algorithms do not necessarily return an exact solution, so we always need to pay attention to the second component. 
 
 In general, increasing the weight $w_i$ tends to make it easier to satisfy the condition, but the objective function becomes relatively smaller. Therefore we propose to use a library called optuna to tune these hyperparameters $w_i$.
 
@@ -176,11 +175,23 @@ study.optimize(objective, n_trials=15)
 print(best_solution)
 ```
 
-# What kind of technique is used?
+## What kind of technique is used?
 
 
 
 The core is as below:
+
+
+
+Algorithm
+
+------
+
+Input: $n$
+
+Output: $A(n)$
+
+​	1. Define $A_0(n) \leftarrow 2$
 
 
 
