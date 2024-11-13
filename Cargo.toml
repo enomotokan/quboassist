@@ -1,0 +1,16 @@
+[package]
+name = "pyfunc_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "pyfunc_rust"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.22.0"
+rayon = "1.10"
+num_cpus = "1.16"
+indexmap = "2.6.0"
+fxhash = "0.2.1"

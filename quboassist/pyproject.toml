@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quboassist"
+version = "0.0.1"
+authors = [{ name="Enomoto Kan", email="enomotokan@gmail.com" }]
+description = "Generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+license = {file = "LICENSE"}
+keywords = [
+    "QUBO",
+    "Simulated annealing",
+]
+
+dependencies = ["numpy"]
+
+[project.urls]
+"Homepage" = "https://github.com/enomotokan/quboassist"
+
+[project.scripts]
+corona = "quboassist:main"
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "twine",
+]
