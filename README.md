@@ -59,7 +59,7 @@ P.add_objective(f)
 P.add_constraint(g)
 ```
 
-where the input of `set_weights` method is the weight of the added constraints. Finally, we can get QUBO by `compile` method.
+ Finally, we can get QUBO by `compile` method.
 
 ```
 qubo = P.compile([10])
@@ -70,7 +70,7 @@ solution = P.solution(result, "neal")
 print(solution)
 ```
 
-The solution is almost always below .
+where the input of `compile` method of `Problem` class  is the weights vector of the added constraints. The solution is almost always below .
 
 ```
 ({'x0': 5, 'x1': 4}, [True])

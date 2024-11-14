@@ -18,7 +18,3 @@ fxhash = "0.2.1"
 [features]
 default = ["python"]
 python = []
-
-[tool.maturin]
-python-source = "python"
-module-name = "quboassist"
