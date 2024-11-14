@@ -1,0 +1,47 @@
+name: Build and Publish Python Package
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build_pyfunc_rust:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install maturin, twine, build
+        run: pip install maturin twine build
+        
+      - name: Build quboassistfunc
+        run: maturin build --release
+        working-directory: ./quboassistfunc
+     
+      - name: BUild quboassist
+        run: maturin build --release
+
+      - name: Build and Upload quboassist to PyPI
+        shell: bash
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: ls dist/ && twine upload --repository pypi target/wheels/* -u __token__ -p $PYPI_API_TOKEN
