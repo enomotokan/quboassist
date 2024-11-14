@@ -134,6 +134,7 @@ class Problem:
 
         else:
             raise ValueError("The input \'solver\' must be 'neal' or 'dimod'.")
+        
         # ckeck whether the solution satisfies constraint conditions
 
         bool_solution = []
