@@ -57,13 +57,12 @@ then `f`,  `g` are instances of `Formula`. Finally, we can define a problem usin
 P = Problem() 
 P.add_objective(f)
 P.add_constraint(g)
-P.set_weights([10])
 ```
 
 where the input of `set_weights` method is the weight of the added constraints. Finally, we can get QUBO by `compile` method.
 
 ```
-qubo = P.compile()
+qubo = P.compile([10])
 
 sampler = neal.SimulatedAnnealingSampler()
 result = sampler.sample_qubo(qubo.todict()).first.sample

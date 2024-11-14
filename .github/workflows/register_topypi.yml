@@ -32,10 +32,6 @@ jobs:
 
       - name: Install maturin, twine, build
         run: pip install maturin twine build
-        
-      - name: Build quboassistfunc
-        run: maturin build --release
-        working-directory: ./quboassistfunc
      
       - name: BUild quboassist
         run: maturin build --release
