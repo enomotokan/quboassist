@@ -29,7 +29,6 @@ class Problem:
             elif f.comp == ">=":
                 M = 0
                 m = 0
-
                 for n in range(len(f.lin.index_list)):
                     var_index = f.lin.index_list[n]
                     if f.lin.coef_list[n] > 0:
@@ -186,10 +185,16 @@ class Formula:
         if f.comp != "":
             raise SyntaxError("Operation is not defined for ineqation.")
         
+        
         F = Formula()
 
         try:
             num = float(g)
+
+            print(f.lin.index_list)
+            print(f.lin.coef_list)
+            print(g)
+            print(sign)
 
             F.const = sign[0] * f.const + sign[1] * num
             F.order = f.order
@@ -202,9 +207,11 @@ class Formula:
                 F.quad.coef_list_list = f.quad.coef_list_list
 
             else:
-                F.lin.coef_list = times_coef_list(- 1, F.lin.coef_list)
+                F.lin.coef_list = times_coef_list(- 1, f.lin.coef_list)
                 F.quad.coef_list_list = times_coef_list_list(- 1, F.quad.coef_list_list)
             
+            print(F.lin.index_list)
+            print(F.lin.coef_list)
             return F
 
         except:

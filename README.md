@@ -109,7 +109,7 @@ sampler = neal.SimulatedAnnealingSampler()
 
 def objective(trial):
     
-    w = [trial.suggest_float("w{}".format(i), 0, 5) for i in range(2)  
+    w = [trial.suggest_float("w{}".format(i), 0, 5) for i in range(2)]
     qubo = P.compile(w)
 
     result = sampler.sample_qubo(qubo.todict()).first
