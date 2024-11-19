@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_pyfunc_rust:
+  register_topypi:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
