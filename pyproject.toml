@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "quboassist"
-version = "0.0.17"
+version = "0.0.18"
 authors = [{ name="Enomoto Kan", email="enomotokan@gmail.com" }]
 description = "Generate QUBO which can be input to dwave-neal simulated annealing solver and reconstruct the solution of the original problem."
 readme = "README.md"

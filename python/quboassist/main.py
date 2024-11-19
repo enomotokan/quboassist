@@ -50,6 +50,7 @@ class Problem:
                     variables.append("")
                     variable_range.append([0, M + f.const])
                     variable_A.append(A(M + f.const))
+                    index_binindexptr.append(index_binindexptr[-1] + len(variable_A[-1]))
                     for i in range(len(variable_A[-1])):
                         binindex_index.append([index_aux, i])
 
@@ -88,7 +89,6 @@ class Problem:
             raise TypeError("The type of all elements in weights must be numeric.")
 
         self.qubo = obj_bin(self.obj.quad, self.obj.lin, index_binindexptr, variable_A, variable_range)
-
 
         for n in range(len(self.qubo_cond), len(self.cond)):
             cond_bin_lin = Lin([], [])
@@ -191,11 +191,6 @@ class Formula:
         try:
             num = float(g)
 
-            print(f.lin.index_list)
-            print(f.lin.coef_list)
-            print(g)
-            print(sign)
-
             F.const = sign[0] * f.const + sign[1] * num
             F.order = f.order
             F.lin.index_list = f.lin.index_list
@@ -210,8 +205,6 @@ class Formula:
                 F.lin.coef_list = times_coef_list(- 1, f.lin.coef_list)
                 F.quad.coef_list_list = times_coef_list_list(- 1, F.quad.coef_list_list)
             
-            print(F.lin.index_list)
-            print(F.lin.coef_list)
             return F
 
         except:
@@ -426,6 +419,7 @@ class Variable(Formula):
             raise SyntaxError("The charactor \'%\' cannot be used in the first of the variable name.")
         else:
             variable_A.append(A(var_max - var_min))
+
             index_binindexptr.append(index_binindexptr[-1] + len(variable_A[-1]))
 
             index = len(variables)
