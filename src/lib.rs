@@ -219,9 +219,9 @@ fn pow_cond_bin (py: Python, lin: &Lin, c: f32) -> PyResult<Py<Quad>> {
         }
     }
 
-    let return_quad = Py::new(py, Quad {index_list: index_list.clone(), index_list_list: index_list_list, coef_list_list: coef_list_list }) ;
+    let return_quad = Quad {index_list: index_list.clone(), index_list_list: index_list_list, coef_list_list: coef_list_list } ;
 
-    return return_quad
+    return Py::new(py, return_quad)
 }
 
 # [pyfunction]
@@ -651,7 +651,7 @@ fn add_quad(py: Python, quad: &Quad, quad_: &Quad, a: f32, a_: f32) -> PyResult<
 
 fn quad_todict(qubo: &Quad, binindex_index: Vec<Vec<usize>>) -> PyResult<HashMap<((usize, usize), (usize, usize)), f32>> {
     
-    let indexes: Vec<((usize, usize), (usize, usize))> = (0..qubo.index_list.len()).into_par_iter().map(|i| (0..qubo.index_list_list[i].len()).map(|j| ((binindex_index[qubo.index_list[i]][0], binindex_index[qubo.index_list[i]][1]), (binindex_index[qubo.index_list[j]][0], binindex_index[qubo.index_list[j]][1]))).collect::<Vec<_>>()).collect::<Vec<_>>().concat();
+    let indexes: Vec<((usize, usize), (usize, usize))> = (0..qubo.index_list.len()).into_par_iter().map(|i| (0..qubo.index_list_list[i].len()).map(|j| ((binindex_index[qubo.index_list[i]][0], binindex_index[qubo.index_list[i]][1]), (binindex_index[qubo.index_list_list[i][j]][0], binindex_index[qubo.index_list_list[i][j]][1]))).collect::<Vec<_>>()).collect::<Vec<_>>().concat();
     let values: Vec<f32> = (0..qubo.index_list.len()).into_par_iter().flat_map(|i| qubo.coef_list_list[i].clone()).collect::<Vec<_>>();
 
     let qubo_dwaveneal: HashMap<_, _> = indexes.into_iter().clone().zip(values.into_iter()).collect::<HashMap<_, _>>();
